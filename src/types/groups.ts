@@ -1,0 +1,1 @@
+export type GroupKey = "FULLDFIESTA" | "FULLDMOTOR" | "FULLDFREESTYLE";
