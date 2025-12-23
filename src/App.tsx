@@ -7,9 +7,9 @@ import { LoginModal } from "./components/LoginModal";
 import { BottomEventCard } from "./components/BottomEventCard";
 import { AdminPanel, type NewEventFormData } from "./components/AdminPanel";
 import { CreateEditionModal } from "./components/modals/CreateEditionModal";
+import { MobileSheet } from "./components/MobileSheet";
 
 import type { Event, DateMode } from "./data/events";
-
 import {
   fetchEventsWithNextEdition,
   createEventGeneral,
@@ -39,6 +39,9 @@ export default function App() {
   // Edition modal
   const [editionModalOpen, setEditionModalOpen] = useState(false);
   const [eventForEdition, setEventForEdition] = useState<Event | null>(null);
+
+  // Mobile sheet snap: 0=panel pequeño (mapa grande), 1=60/40, 2=panel grande
+  const [mobileSnap, setMobileSnap] = useState<0 | 1 | 2>(1);
 
   // Load events (with next edition)
   useEffect(() => {
@@ -89,10 +92,8 @@ export default function App() {
     setPickedCoords(null);
   };
 
-  // Create event (RPC wrapper)
+  // Create event
   const handleCreateEvent = async (data: NewEventFormData) => {
-    // ✅ DB enum evento_tipo = FIJO | ITINERANTE
-    // Ahora mismo tu UI crea eventos “fijos”
     const tipoDB = "FIJO" as const;
 
     const row = await createEventGeneral({
@@ -107,7 +108,6 @@ export default function App() {
       comunidad: null,
     } as any);
 
-    // Guardamos en UI lo de fecha como “preview” (aunque la DB lo gestione en ediciones)
     const date_mode: DateMode = data.date_mode;
     const date_text =
       data.date_mode === "none"
@@ -135,7 +135,6 @@ export default function App() {
 
   const handleDeleteEvent = async (id: string) => {
     await deleteEventGeneral(id);
-
     setEvents((prev) => prev.filter((e) => e.id !== id));
     setSelectedEvent((prev) => (prev?.id === id ? null : prev));
   };
@@ -147,7 +146,6 @@ export default function App() {
     setEditionModalOpen(true);
   };
 
-  // Edition modal saved -> update local state
   const handleEditionSaved = (updated: {
     eventId: string;
     date_mode: DateMode;
@@ -168,8 +166,13 @@ export default function App() {
     );
   };
 
+  // Tell Map to resize when mobile snap changes
+  useEffect(() => {
+    window.dispatchEvent(new Event("fulld:layout"));
+  }, [mobileSnap]);
+
   return (
-    <div className="w-screen h-screen flex flex-col bg-black">
+    <div className="w-screen h-screen flex flex-col bg-black overflow-hidden">
       <Navbar
         activeGroup={activeGroup}
         onChangeGroup={(g) => {
@@ -183,27 +186,86 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      <div className="flex flex-1 overflow-hidden">
-        <Map
-          events={filteredEvents}
-          selectedEvent={selectedEvent}
-          onMarkerClick={(ev) => setSelectedEvent(ev)}
-          activeGroup={activeGroup}
-          pickLocationMode={pickLocationMode}
-          pickedCoords={pickedCoords}
-          onPickLocation={(coords) => {
-            setPickedCoords(coords);
-            setPickLocationMode(false);
-            setIsAdminPanelOpen(true);
-          }}
-          onCancelPickLocation={cancelPickMode}
-        />
+      {/* DESKTOP */}
+      <div className="hidden lg:flex flex-1 overflow-hidden">
+        <div className="flex-1 min-w-0 relative">
+          <Map
+            events={filteredEvents}
+            selectedEvent={selectedEvent}
+            onMarkerClick={(ev) => setSelectedEvent(ev)}
+            activeGroup={activeGroup}
+            pickLocationMode={pickLocationMode}
+            pickedCoords={pickedCoords}
+            onPickLocation={(coords) => {
+              setPickedCoords(coords);
+              setPickLocationMode(false);
+              setIsAdminPanelOpen(true);
+            }}
+            onCancelPickLocation={cancelPickMode}
+          />
+        </div>
 
         <RightSidebar
           activeGroup={activeGroup}
           events={filteredEvents}
           onSelectEvent={(ev) => setSelectedEvent(ev)}
         />
+      </div>
+
+      {/* MÓVIL: panel arriba (sheet) + mapa abajo */}
+      <div className="lg:hidden flex-1 overflow-hidden relative">
+        {/* PANEL ARRIBA */}
+        <MobileSheet
+          snap={mobileSnap}
+          onSnapChange={setMobileSnap}
+          title={`${activeGroup} · ${filteredEvents.length} eventos`}
+        >
+          <div className="px-4 pb-4">
+            <div className="text-white/70 text-xs mb-2">Trending (próximo paso)</div>
+
+            <div className="space-y-2">
+              {filteredEvents.map((ev) => (
+                <button
+                  key={ev.id}
+                  onClick={() => setSelectedEvent(ev)}
+                  className="w-full text-left px-3 py-3 rounded-xl border border-white/10 hover:bg-white/5"
+                >
+                  <div className="text-sm font-semibold text-white">{ev.name}</div>
+                  <div className="text-xs text-white/60">
+                    {(ev.city ?? "Sin ciudad")} ·{" "}
+                    {ev.date_mode === "none" || !ev.date_text
+                      ? "Por confirmar"
+                      : ev.date_mode === "approx"
+                        ? `Aprox: ${ev.date_text}`
+                        : ev.date_text}
+                  </div>
+                </button>
+              ))}
+
+              {filteredEvents.length === 0 && (
+                <div className="text-white/60 text-sm">No hay eventos.</div>
+              )}
+            </div>
+          </div>
+        </MobileSheet>
+
+        {/* MAPA ABAJO: ocupa el espacio restante */}
+        <div className="absolute left-0 right-0 bottom-0 top-0 z-0">
+          <Map
+            events={filteredEvents}
+            selectedEvent={selectedEvent}
+            onMarkerClick={(ev) => setSelectedEvent(ev)}
+            activeGroup={activeGroup}
+            pickLocationMode={pickLocationMode}
+            pickedCoords={pickedCoords}
+            onPickLocation={(coords) => {
+              setPickedCoords(coords);
+              setPickLocationMode(false);
+              setIsAdminPanelOpen(true);
+            }}
+            onCancelPickLocation={cancelPickMode}
+          />
+        </div>
       </div>
 
       <BottomEventCard
@@ -220,7 +282,6 @@ export default function App() {
         onLoginSuccess={handleLoginSuccess}
       />
 
-      {/* FAB Add Event */}
       {user && !pickLocationMode && (
         <button
           onClick={startAddEventFlow}
@@ -266,9 +327,7 @@ export default function App() {
       />
 
       {loadingEvents && (
-        <div className="fixed bottom-4 left-4 text-white/70 text-sm">
-          Loading events...
-        </div>
+        <div className="fixed bottom-4 left-4 text-white/70 text-sm">Loading events...</div>
       )}
     </div>
   );

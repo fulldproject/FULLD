@@ -7,11 +7,18 @@ html,
 body,
 #root {
   height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior: none; /* Prevent browser bounce/history swipe */
+  touch-action: pan-y; /* Default to vertical pan only */
+  position: fixed; /* Lock body to prevent elastic scroll on iOS */
+  inset: 0;
 }
 
 body {
   margin: 0;
   background-color: black;
+  -webkit-text-size-adjust: 100%;
 }
 
 @keyframes slideUp {

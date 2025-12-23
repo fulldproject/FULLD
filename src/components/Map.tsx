@@ -27,7 +27,6 @@ const STYLE_BY_GROUP_NIGHT: Record<GroupKey, string> = {
 };
 
 function getDateLabel(ev: MapEvent): string {
-    // date_mode: "exact" | "approx" | "none"
     if (ev.date_mode === "approx") return `Aprox: ${ev.date_text ?? "—"}`;
     if (ev.date_mode === "exact") return ev.date_text ?? "—";
     return "Por confirmar";
@@ -58,6 +57,9 @@ export const Map: React.FC<{
         const popupRef = useRef<maplibregl.Popup | null>(null);
         const pickMarkerRef = useRef<maplibregl.Marker | null>(null);
 
+        // Guardamos referencias a markers para borrarlos bien
+        const markersRef = useRef<maplibregl.Marker[]>([]);
+
         const [isNight, setIsNight] = useState(false);
 
         useEffect(() => {
@@ -78,32 +80,83 @@ export const Map: React.FC<{
         // Init map
         useEffect(() => {
             if (!mapContainerRef.current) return;
+            if (mapRef.current) return;
 
-            if (!mapRef.current) {
-                mapRef.current = new maplibregl.Map({
-                    container: mapContainerRef.current,
-                    style: currentStyle,
-                    center: INITIAL_CENTER,
-                    zoom: INITIAL_ZOOM,
-                });
+            const map = new maplibregl.Map({
+                container: mapContainerRef.current,
+                style: currentStyle,
+                center: INITIAL_CENTER,
+                zoom: INITIAL_ZOOM,
+            });
 
-                mapRef.current.addControl(
-                    new maplibregl.NavigationControl(),
-                    "top-right"
-                );
-            }
+            map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+            mapRef.current = map;
+
+            return () => {
+                markersRef.current.forEach((m) => m.remove());
+                markersRef.current = [];
+                pickMarkerRef.current?.remove();
+                popupRef.current?.remove();
+                map.remove();
+                mapRef.current = null;
+            };
+            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, []);
 
-        // Change style
+        // Change style (y re-resize al terminar de cargar el style)
         useEffect(() => {
-            if (mapRef.current) mapRef.current.setStyle(currentStyle);
-        }, [activeGroup, isNight]);
+            const map = mapRef.current;
+            if (!map) return;
+
+            map.setStyle(currentStyle);
+
+            // Cuando el style termina de cargar, forzamos resize (evita recortes / “negro”)
+            const onStyleLoaded = () => {
+                try {
+                    map.resize();
+                } catch {
+                    // ignore
+                }
+            };
+
+            map.once("idle", onStyleLoaded);
+
+            return () => {
+                map.off("idle", onStyleLoaded);
+            };
+        }, [currentStyle]);
+
+        // ✅ Resize map when mobile layout changes (sheet snap/drag) + window resize
+        useEffect(() => {
+            const onLayout = () => {
+                if (!mapRef.current) return;
+                try {
+                    mapRef.current.resize();
+                } catch {
+                    // ignore
+                }
+            };
+
+            window.addEventListener("fulld:layout", onLayout);
+            window.addEventListener("resize", onLayout);
+
+            // Extra: un resize al montar por si entra “raro”
+            const t = window.setTimeout(() => onLayout(), 0);
+
+            return () => {
+                window.removeEventListener("fulld:layout", onLayout);
+                window.removeEventListener("resize", onLayout);
+                window.clearTimeout(t);
+            };
+        }, []);
 
         // Draw markers
         useEffect(() => {
             if (!mapRef.current) return;
 
-            document.querySelectorAll(".fulld-marker").forEach((m) => m.remove());
+            markersRef.current.forEach((m) => m.remove());
+            markersRef.current = [];
 
             events.forEach((ev) => {
                 const el = document.createElement("div");
@@ -117,9 +170,11 @@ export const Map: React.FC<{
 
                 el.addEventListener("click", () => onMarkerClick(ev));
 
-                new maplibregl.Marker({ element: el })
+                const marker = new maplibregl.Marker({ element: el })
                     .setLngLat([ev.lon, ev.lat])
                     .addTo(mapRef.current!);
+
+                markersRef.current.push(marker);
             });
         }, [events, onMarkerClick]);
 
@@ -174,7 +229,7 @@ export const Map: React.FC<{
                 .addTo(mapRef.current);
         }, [selectedEvent]);
 
-        // ✅ Pick mode: click on map
+        // ✅ Pick mode: click on map (y desactivar drag pan mientras eliges punto)
         useEffect(() => {
             if (!mapRef.current) return;
 
@@ -182,6 +237,12 @@ export const Map: React.FC<{
 
             if (!pickLocationMode) {
                 map.getCanvas().style.cursor = "";
+                try {
+                    map.dragPan.enable();
+                    map.touchZoomRotate.enable();
+                } catch {
+                    // ignore
+                }
                 return;
             }
 
@@ -193,9 +254,23 @@ export const Map: React.FC<{
             map.getCanvas().style.cursor = "crosshair";
             map.on("click", handleClick);
 
+            // mientras está en pick mode, evitamos que el mapa “robe” gestos
+            try {
+                map.dragPan.disable();
+                map.touchZoomRotate.disableRotation();
+            } catch {
+                // ignore
+            }
+
             return () => {
                 map.off("click", handleClick);
                 map.getCanvas().style.cursor = "";
+                try {
+                    map.dragPan.enable();
+                    map.touchZoomRotate.enable();
+                } catch {
+                    // ignore
+                }
             };
         }, [pickLocationMode, onPickLocation]);
 
