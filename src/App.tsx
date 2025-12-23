@@ -7,7 +7,8 @@ import { LoginModal } from "./components/LoginModal";
 import { BottomEventCard } from "./components/BottomEventCard";
 import { AdminPanel, type NewEventFormData } from "./components/AdminPanel";
 import { CreateEditionModal } from "./components/modals/CreateEditionModal";
-import { MobileSheet } from "./components/MobileSheet";
+import { MobileSheet, SNAP_TO_VH } from "./components/MobileSheet";
+import { TrendingSection } from "./components/TrendingSection";
 
 import type { Event, DateMode } from "./data/events";
 import {
@@ -42,6 +43,7 @@ export default function App() {
 
   // Mobile sheet snap: 0=panel pequeño (mapa grande), 1=60/40, 2=panel grande
   const [mobileSnap, setMobileSnap] = useState<0 | 1 | 2>(1);
+  const [isSheetDragging, setIsSheetDragging] = useState(false);
 
   // Load events (with next edition)
   useEffect(() => {
@@ -218,10 +220,13 @@ export default function App() {
         <MobileSheet
           snap={mobileSnap}
           onSnapChange={setMobileSnap}
+          onDraggingChange={setIsSheetDragging}
           title={`${activeGroup} · ${filteredEvents.length} eventos`}
         >
           <div className="px-4 pb-4">
-            <div className="text-white/70 text-xs mb-2">Trending (próximo paso)</div>
+            <TrendingSection />
+
+            <div className="text-white/70 text-xs mb-2 mt-2">All Events</div>
 
             <div className="space-y-2">
               {filteredEvents.map((ev) => (
@@ -250,7 +255,10 @@ export default function App() {
         </MobileSheet>
 
         {/* MAPA ABAJO: ocupa el espacio restante */}
-        <div className="absolute left-0 right-0 bottom-0 top-0 z-0">
+        <div
+          className={`absolute left-0 right-0 bottom-0 top-0 z-0 transition-opacity ${isSheetDragging ? "pointer-events-none" : "pointer-events-auto"
+            }`}
+        >
           <Map
             events={filteredEvents}
             selectedEvent={selectedEvent}
@@ -264,6 +272,18 @@ export default function App() {
               setIsAdminPanelOpen(true);
             }}
             onCancelPickLocation={cancelPickMode}
+            topPadding={
+              typeof window !== "undefined"
+                ? (window.innerHeight * SNAP_TO_VH[mobileSnap]) / 100
+                : 0
+            }
+          />
+          {/* Map Dimming Overlay */}
+          <div
+            className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-300 ease-out"
+            style={{
+              opacity: mobileSnap === 0 ? 0 : mobileSnap === 1 ? 0.3 : 0.7,
+            }}
           />
         </div>
       </div>

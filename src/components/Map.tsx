@@ -42,6 +42,7 @@ export const Map: React.FC<{
     pickedCoords?: { lat: number; lon: number } | null;
     onPickLocation?: (coords: { lat: number; lon: number }) => void;
     onCancelPickLocation?: () => void;
+    topPadding?: number;
 }> = ({
     events,
     selectedEvent,
@@ -51,6 +52,7 @@ export const Map: React.FC<{
     pickedCoords = null,
     onPickLocation,
     onCancelPickLocation,
+    topPadding = 0,
 }) => {
         const mapContainerRef = useRef<HTMLDivElement | null>(null);
         const mapRef = useRef<maplibregl.Map | null>(null);
@@ -150,6 +152,19 @@ export const Map: React.FC<{
                 window.clearTimeout(t);
             };
         }, []);
+
+        // ✅ Update padding when topPadding changes
+        useEffect(() => {
+            const map = mapRef.current;
+            if (!map) return;
+            try {
+                map.setPadding({ top: topPadding, bottom: 0, left: 0, right: 0 });
+            } catch {
+                // ignore
+            }
+        }, [topPadding]);
+
+        // ✅ Resize map when mobile layout changes (sheet snap/drag) + window resize
 
         // Draw markers
         useEffect(() => {

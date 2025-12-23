@@ -83,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     }, []);
 
     return (
-        <header className="w-full h-14 bg-black text-white flex items-center px-3 sm:px-4 shadow-lg relative z-50 shrink-0 select-none overflow-hidden">
+        <header className="w-full h-14 bg-black text-white flex items-center px-3 sm:px-4 shadow-lg relative z-50 shrink-0 select-none overflow-hidden touch-none">
             {/* LEFT */}
             <div className="flex items-center gap-3 shrink-0">
                 <button
@@ -170,13 +170,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <button
                         onClick={toggleCategories}
                         className={[
-                            "px-3 py-1.5 text-xs rounded-full transition whitespace-nowrap border",
+                            "w-9 h-9 rounded-md flex items-center justify-center transition shrink-0",
                             isCategoryMenuOpen
-                                ? "bg-white text-black border-white font-semibold"
-                                : "bg-transparent text-gray-200 border-white/20 hover:bg-white/10",
+                                ? "bg-white text-black"
+                                : "bg-white/10 text-white hover:bg-white/20",
                         ].join(" ")}
+                        aria-label="Categorías"
                     >
-                        Categories
+                        <div className="grid grid-cols-2 gap-[2px] w-4 h-4 opacity-90">
+                            <span className="bg-current rounded-[0.5px]" />
+                            <span className="bg-current rounded-[0.5px]" />
+                            <span className="bg-current rounded-[0.5px]" />
+                            <span className="bg-current rounded-[0.5px]" />
+                        </div>
                     </button>
 
                     {isCategoryMenuOpen && (
