@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Navbar, type GroupKey } from "./components/Navbar";
 import { RightSidebar } from "./components/RightSidebar";
 import { Map } from "./components/Map";
@@ -89,10 +89,10 @@ export default function App() {
     setIsAdminPanelOpen(false);
   };
 
-  const cancelPickMode = () => {
+  const cancelPickMode = useCallback(() => {
     setPickLocationMode(false);
     setPickedCoords(null);
-  };
+  }, []);
 
   // Create event
   const handleCreateEvent = async (data: NewEventFormData) => {
@@ -168,6 +168,16 @@ export default function App() {
     );
   };
 
+  const handleMarkerClick = useCallback((ev: Event) => {
+    setSelectedEvent(ev);
+  }, []);
+
+  const handlePickLocation = useCallback((coords: { lat: number; lon: number }) => {
+    setPickedCoords(coords);
+    setPickLocationMode(false);
+    setIsAdminPanelOpen(true);
+  }, []);
+
   // Tell Map to resize when mobile snap changes
   useEffect(() => {
     window.dispatchEvent(new Event("fulld:layout"));
@@ -194,15 +204,11 @@ export default function App() {
           <Map
             events={filteredEvents}
             selectedEvent={selectedEvent}
-            onMarkerClick={(ev) => setSelectedEvent(ev)}
+            onMarkerClick={handleMarkerClick}
             activeGroup={activeGroup}
             pickLocationMode={pickLocationMode}
             pickedCoords={pickedCoords}
-            onPickLocation={(coords) => {
-              setPickedCoords(coords);
-              setPickLocationMode(false);
-              setIsAdminPanelOpen(true);
-            }}
+            onPickLocation={handlePickLocation}
             onCancelPickLocation={cancelPickMode}
           />
         </div>
@@ -262,15 +268,11 @@ export default function App() {
           <Map
             events={filteredEvents}
             selectedEvent={selectedEvent}
-            onMarkerClick={(ev) => setSelectedEvent(ev)}
+            onMarkerClick={handleMarkerClick}
             activeGroup={activeGroup}
             pickLocationMode={pickLocationMode}
             pickedCoords={pickedCoords}
-            onPickLocation={(coords) => {
-              setPickedCoords(coords);
-              setPickLocationMode(false);
-              setIsAdminPanelOpen(true);
-            }}
+            onPickLocation={handlePickLocation}
             onCancelPickLocation={cancelPickMode}
             topPadding={
               typeof window !== "undefined"
