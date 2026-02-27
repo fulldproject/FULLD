@@ -1,0 +1,111 @@
+/* Tailwind v4 */
+@import "tailwindcss";
+
+/* ✅ MapLibre CSS (OBLIGATORIO para que el mapa se vea) */
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+/* Root height resets */
+:root {
+  /* Dark SaaS Theme (Zinc-based) */
+  --bg-primary: #09090b; /* zinc-950 */
+  --bg-secondary: #18181b; /* zinc-900 */
+  --bg-tertiary: #27272a; /* zinc-800 */
+
+  --text-primary: #f4f4f5; /* zinc-100 */
+  --text-secondary: #a1a1aa; /* zinc-400 */
+  --text-muted: #52525b; /* zinc-600 */
+
+  --primary: #3b82f6; /* blue-500 */
+  --primary-foreground: #ffffff;
+  --primary-hover: #2563eb; /* blue-600 */
+
+  --danger: #ef4444; /* red-500 */
+  --danger-foreground: #ffffff;
+
+  --border: #27272a; /* zinc-800 */
+  --input: #27272a;
+  --ring: #3b82f6;
+
+  --radius: 0.5rem;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility: Hide scrollbars but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Utility: Mobile bottom safe area padding */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* Custom scrollbar styling for areas that do want them */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Ensure images don't stretch layout */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Sonar Pulse Animation */
+@keyframes sonar {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
+
+.animate-sonar {
+  animation: sonar 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* MapLibre: evita pantalla negra por canvas sin tamaño */
+.maplibregl-canvas,
+.maplibregl-map {
+  width: 100% !important;
+  height: 100% !important;
+}

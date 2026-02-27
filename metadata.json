@@ -1,0 +1,7 @@
+{
+  "name": "FULLD",
+  "description": "A professional, mobile-first event-mapping platform organized by macro groups and micro categories.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
