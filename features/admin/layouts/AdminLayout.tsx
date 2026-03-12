@@ -57,7 +57,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white flex font-sans">
+        <div className="h-[100dvh] overflow-hidden bg-[#050505] text-white flex font-sans">
             {/* Sidebar */}
             <aside className="w-64 border-r border-white/5 bg-black flex-shrink-0 flex flex-col fixed top-0 bottom-0 left-0 z-50">
                 <div className="h-16 flex items-center px-6 border-b border-white/5">
@@ -98,7 +98,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-grow ml-64 p-8 min-w-0">
+            <main className="flex-grow ml-64 p-8 min-w-0 overflow-y-auto">
                 <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
                     {children}
                 </div>

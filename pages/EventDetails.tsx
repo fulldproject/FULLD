@@ -283,13 +283,15 @@ export const EventDetails: React.FC = () => {
             <section className="space-y-6">
               <h2 className="text-xl font-bold border-l-4 border-white pl-4 uppercase tracking-widest">About this Event</h2>
               <div className="text-gray-400 leading-relaxed text-lg space-y-4 text-pretty">
-                <p className="text-white font-semibold">{event.short_description}</p>
-                <p>
-                  Experience the pulse of the city at {event.name}. This exclusive {event.category} gathering within the {event.group_key} community brings together creators, enthusiasts, and innovators for an unforgettable session.
-                </p>
-                <p>
-                  Join us at {event.city}, {event.province} for a curated experience that blends high-energy atmosphere with the unique cultural identity of our movement.
-                </p>
+                {edition?.description ? (
+                  <p className="text-white font-semibold whitespace-pre-wrap">{edition.description}</p>
+                ) : event.short_description ? (
+                  <p className="text-white font-semibold whitespace-pre-wrap">{event.short_description}</p>
+                ) : (
+                  <p className="text-white font-semibold whitespace-pre-wrap">
+                    Evento ubicado en {event.city}, {event.province}.
+                  </p>
+                )}
               </div>
             </section>
 

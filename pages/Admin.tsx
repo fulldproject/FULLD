@@ -187,7 +187,7 @@ export const Admin: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col font-sans">
+      <div className="h-[100dvh] overflow-y-auto bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col font-sans">
         <header className="h-[64px] border-b border-[var(--border)] px-6 flex items-center justify-between sticky top-0 bg-[var(--bg-primary)]/80 backdrop-blur-xl z-20">
           <div className="flex items-center gap-4">
             <Link to="/" className="p-2 hover:bg-white/5 rounded-full transition-colors">

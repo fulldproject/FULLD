@@ -49,6 +49,11 @@ export interface EventGeneral {
   province: string;
   community: string;
 
+  country_code?: string;
+  admin_level_1?: string;
+  admin_level_2?: string;
+  admin_level_3?: string;
+
   venue?: string;
 
   short_description: string;
@@ -112,6 +117,11 @@ export interface SuggestionPayload {
   city?: string;
   province?: string;
   community?: string;
+
+  country_code?: string;
+  admin_level_1?: string;
+  admin_level_2?: string;
+  admin_level_3?: string;
 
   // Specific for 'edition'
   event_id?: string;
